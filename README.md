@@ -232,49 +232,50 @@ message-filter/
 └── README.md
 ```
 
-## Deploying on Render
+## Deploying on Render (recommended: one Web Service)
 
-You need **two services**:
+Do **not** point the frontend at `http://localhost:5000`. That only works on your laptop.
 
-1. **Web Service** — Express backend (`server.js`)
-2. **Static Site** — React frontend (`frontend/`)
+### Recommended: single Web Service (API + UI)
 
-A browser on `https://....onrender.com` cannot call `http://localhost:5000`. Vite bakes `VITE_API_URL` in at **build** time.
+Create a **Web Service** (not a Static Site) from this repo:
 
-### 1) Backend (Web Service)
-
-- **Root Directory:** leave empty (repo root)
-- **Build Command:** `npm install`
+- **Root Directory:** _(empty / repo root)_
+- **Build Command:** `npm run render-build`
 - **Start Command:** `npm start`
 - **Environment:**
 
 ```
 MONGODB_URI=...
 GROQ_API_KEY=...
-CLIENT_ORIGIN=https://message-filter-1-bnhe.onrender.com
 ```
 
-Copy the backend URL after deploy, e.g. `https://message-filter-api.onrender.com`.
+This builds the React app and Express serves it from the same domain. The UI calls `/api/tickets` on the same host — no localhost, no CORS issues.
 
-### 2) Frontend (Static Site)
+Open the Web Service URL Render gives you (e.g. `https://message-filter-xxxx.onrender.com`).
 
-- **Root Directory:** `frontend`
-- **Build Command:** `npm install && npm run build`
-- **Publish Directory:** `dist`
-- **Environment:**
+You can delete or ignore the separate Static Site (`message-filter-1-bnhe`) if you use this approach.
+
+### Alternative: separate Static Site + Web Service
+
+Only if you keep two services:
+
+1. Web Service for the API (`npm start`, env: `MONGODB_URI`, `GROQ_API_KEY`, `CLIENT_ORIGIN=https://your-frontend.onrender.com`)
+2. Static Site for `frontend/` with:
 
 ```
-VITE_API_URL=https://YOUR-BACKEND-SERVICE.onrender.com/api
+VITE_API_URL=https://YOUR-BACKEND.onrender.com/api
 ```
 
-Then **Clear build cache & deploy** so Vite rebuilds with the new API URL.
+Then **Clear build cache & deploy** the Static Site (Vite embeds this at build time).
 
 ### Local frontend
 
 ```bash
+# terminal 1 — API
+npm run dev
+
+# terminal 2 — UI (proxies /api → localhost:5000)
 cd frontend
-npm install
 npm run dev
 ```
-
-Uses `frontend/.env` → `VITE_API_URL=http://localhost:5000/api` by default.
