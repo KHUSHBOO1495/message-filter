@@ -1,0 +1,3 @@
+// middleware/
+// Future purpose: Express middleware such as request validation,
+// error handling, and authentication (when needed)
